@@ -2,6 +2,7 @@ clear all;
 close all;
 
 rng(0);
+Ne = 10;
 
 bit_rate = 16e6;  % 符号速率
 T = 1/bit_rate;  % 符号时间
@@ -9,31 +10,29 @@ T = 1/bit_rate;  % 符号时间
 f_IF = 20e6; %射频频率
 fs_IF = 64e6;  % 射频、中频频信号采样速率
 fs_BB = 128e6;  % 基带信号采样速率
-num_bits_pulse = 300; 
+num_bits_pulse = 5000; 
 oversamp_BB = T * fs_BB;  % 基带信号过采样速率
 oversamp_IF = T * fs_IF;  % 射频、中频信号过采样速率
 T_s_BB = 1/fs_BB;  % 基带采样间隔
 
 load('lib/g_1024.mat');  % GMSK调制 g函数 
-
 g = g(1:16:end);
 
-% state = zeros(32,2);
+error_index = 1;
+error_cnt = zeros(1,11);
+Eb_N0_cnt = zeros(1,11);
 
-% for k = 1:32
-%     tmp = dec2bin(k-1, 5);
-%     state(k,1) = bin2dec([tmp(2:end), '0']) + 1;
-%     state(k,2) = bin2dec([tmp(2:end), '1']) + 1;
-% end
+for Eb_N0 = 5:15
+
 error_rate = 0;
 
-for ll = 1 : 1
+for ll = 1 : Ne
 
 % generate code
 
-% I_single = randi(2,1,num_bits_pulse);
-% I_single = I_single - 1;
-load('test_I.mat');
+I_single = randi(2,1,num_bits_pulse);
+I_single = I_single - 1;
+% load('test_I.mat');
 I = 2*I_single - 1;
 % I_single = [0,0,1,0,0,0,1,1,1,1];
 % I = [1,-1,1,-1,-1,-1,1,1,1,1];
@@ -77,7 +76,7 @@ fre = t./(num_bits_pulse*T)*fs_IF;
 
 
 % 加噪声
-Eb_N0 = 5;
+% Eb_N0 = 5;
 SNRdB = Eb_N0 - 10*log10(oversamp_IF);
 signal_recv_IF_noise = awgn(signal_trans_IF, SNRdB, 'measured');
 % signal_recv_IF_noise = signal_trans_IF;
@@ -222,12 +221,27 @@ end
 
 error = I_single - de_out;
 
-error(error~=0) = 1
+error(error~=0) = 1;
 
 error_rate = error_rate + sum(error);
 end
 
+error_rate/num_bits_pulse/Ne;
 
-error_rate/num_bits_pulse
+error_cnt(error_index) = error_rate/num_bits_pulse/Ne;
+Eb_N0_cnt(error_index) = Eb_N0;
+error_index = error_index + 1;
+
+end
+
+% BER plot
+
+f = figure;
+f.PaperUnits = 'centimeters';
+f.PaperSize = [16, 12];
+f.Units = 'centimeters';
+f.Position = [0, 0, 16, 12];
+semilogy(Eb_N0_cnt, error_cnt, '-ks', 'LineWidth', 2);
+xlim([min(Eb_N0_cnt)-1, max(Eb_N0_cnt)+1]);
 
 
