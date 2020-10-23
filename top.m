@@ -1,8 +1,8 @@
 clear all; 
 close all;
 
-rng(0);
-Ne = 10;
+% rng(0);
+Ne = 100;
 
 bit_rate = 16e6;  % 符号速率
 T = 1/bit_rate;  % 符号时间
@@ -10,7 +10,7 @@ T = 1/bit_rate;  % 符号时间
 f_IF = 20e6; %射频频率
 fs_IF = 64e6;  % 射频、中频频信号采样速率
 fs_BB = 128e6;  % 基带信号采样速率
-num_bits_pulse = 5000; 
+num_bits_pulse = 3000; 
 oversamp_BB = T * fs_BB;  % 基带信号过采样速率
 oversamp_IF = T * fs_IF;  % 射频、中频信号过采样速率
 T_s_BB = 1/fs_BB;  % 基带采样间隔
@@ -19,10 +19,10 @@ load('lib/g_1024.mat');  % GMSK调制 g函数
 g = g(1:16:end);
 
 error_index = 1;
-error_cnt = zeros(1,11);
-Eb_N0_cnt = zeros(1,11);
+error_cnt = zeros(1,9);
+Eb_N0_cnt = zeros(1,9);
 
-for Eb_N0 = 5:15
+for Eb_N0 = 5:13
 
 error_rate = 0;
 
@@ -39,6 +39,8 @@ I = 2*I_single - 1;
 
 % coding
 bit_5 = zeros(1,5);
+
+
 phi_last = 0;
 
 for i = 1:num_bits_pulse
@@ -89,7 +91,8 @@ signal_recv_noise_IF_FFT = abs(fft(signal_recv_IF_noise));
 
 % 低通滤波
 
-LPF = [-2.09996781279780e-06,1.48709839477551e-05,2.41084066936802e-05,7.67786559304659e-06,-4.09259577702220e-05,-8.00291950244231e-05,-4.28121775662192e-05,8.39217038174333e-05,0.000198996940063321,0.000143352961846203,-0.000126819855599412,-0.000410207352970788,-0.000369458463558583,0.000126671332563022,0.000733581280914653,0.000802565752592462,-6.20571789460999e-07,-0.00116213178237107,-0.00153703156923141,-0.000383445772287268,0.00164046974116608,0.00266364777074907,0.00121047725370158,-0.00204234618765731,-0.00424686114244369,-0.00271584085615062,0.00214956679334894,0.00629995763102076,0.00518195988408056,-0.00163029888540793,-0.00876460407608604,-0.00894949222251640,2.37850893950213e-06,0.0115012888139029,0.0144823392483473,0.00346706512785841,-0.0142957653923261,-0.0225989826221139,-0.0100919992380440,0.0168829707471250,0.0352960794540586,0.0230493817765340,-0.0189854455536604,-0.0595950632578754,-0.0546144621111168,0.0203591687539180,0.145950735187827,0.264171020676178,0.312496426755729,0.264171020676178,0.145950735187827,0.0203591687539180,-0.0546144621111168,-0.0595950632578754,-0.0189854455536604,0.0230493817765340,0.0352960794540586,0.0168829707471250,-0.0100919992380440,-0.0225989826221139,-0.0142957653923261,0.00346706512785841,0.0144823392483473,0.0115012888139029,2.37850893950213e-06,-0.00894949222251640,-0.00876460407608604,-0.00163029888540793,0.00518195988408056,0.00629995763102076,0.00214956679334894,-0.00271584085615062,-0.00424686114244369,-0.00204234618765731,0.00121047725370158,0.00266364777074907,0.00164046974116608,-0.000383445772287268,-0.00153703156923141,-0.00116213178237107,-6.20571789460999e-07,0.000802565752592462,0.000733581280914653,0.000126671332563022,-0.000369458463558583,-0.000410207352970788,-0.000126819855599412,0.000143352961846203,0.000198996940063321,8.39217038174333e-05,-4.28121775662192e-05,-8.00291950244231e-05,-4.09259577702220e-05,7.67786559304659e-06,2.41084066936802e-05,1.48709839477551e-05,-2.09996781279780e-06];
+LPF = [0.000419533866398058,-0.000888354496183992,-0.000853437623768592,-0.000631298799865539,-2.40800381611274e-05,0.000757726612508301,0.00124279157153801,0.00100718942187309,6.11349594777944e-06,-0.00127966699253509,-0.00204136110437968,-0.00162139817984884,-7.51640527054630e-06,0.00200063649880008,0.00314685992485242,0.00246771090895958,8.74772351090950e-06,-0.00298552899026191,-0.00465094660214941,-0.00361541320946284,-1.02589693362414e-05,0.00431736672636526,0.00668350449440606,0.00516716692440808,1.16677091975264e-05,-0.00612641623913192,-0.00945499326702595,-0.00729373821942378,-1.26285747392181e-05,0.00864688543125808,0.0133562430870217,0.0103253357103565,1.39560789926429e-05,-0.0123588569838066,-0.0192224558203244,-0.0149957418809320,-1.48710949738265e-05,0.0184487731613767,0.0292381503162025,0.0233590153736128,1.56686296873214e-05,-0.0308372382510145,-0.0514618173035326,-0.0440872983709100,-1.56557954715510e-05,0.0744478850711668,0.158618847348271,0.224900901783822,0.250015876706213,0.224900901783822,0.158618847348271,0.0744478850711668,-1.56557954715510e-05,-0.0440872983709100,-0.0514618173035326,-0.0308372382510145,1.56686296873214e-05,0.0233590153736128,0.0292381503162025,0.0184487731613767,-1.48710949738265e-05,-0.0149957418809320,-0.0192224558203244,-0.0123588569838066,1.39560789926429e-05,0.0103253357103565,0.0133562430870217,0.00864688543125808,-1.26285747392181e-05,-0.00729373821942378,-0.00945499326702595,-0.00612641623913192,1.16677091975264e-05,0.00516716692440808,0.00668350449440606,0.00431736672636526,-1.02589693362414e-05,-0.00361541320946284,-0.00465094660214941,-0.00298552899026191,8.74772351090950e-06,0.00246771090895958,0.00314685992485242,0.00200063649880008,-7.51640527054630e-06,-0.00162139817984884,-0.00204136110437968,-0.00127966699253509,6.11349594777944e-06,0.00100718942187309,0.00124279157153801,0.000757726612508301,-2.40800381611274e-05,-0.000631298799865539,-0.000853437623768592,-0.000888354496183992,0.000419533866398058];
+% LPF = [-0.000802208597432932,0.000274012677990304,0.000642510473715215,0.000946999415062327,0.000891916050444873,0.000343793840903912,-0.000536240328039012,-0.00131477084764724,-0.00148902995381680,-0.000790675452817240,0.000581761681437109,0.00196476830994624,0.00252374305662866,0.00172239576761462,-0.000280356461407567,-0.00256991435306819,-0.00385674604167267,-0.00316803805115370,-0.000490591828793483,0.00302142690249472,0.00549129901414302,0.00527836650663518,0.00198141321136188,-0.00308987510505797,-0.00735036957404938,-0.00819657411948721,-0.00450206260885427,0.00246334247774722,0.00932162509793802,0.0121291137400687,0.00851827609598724,-0.000667699637068033,-0.0112575451563172,-0.0174798363625150,-0.0149003745646248,-0.00316325538761452,0.0129951262378319,0.0253189360751059,0.0258185755732741,0.0111788546136904,-0.0143738689839372,-0.0394190876857844,-0.0492672140398497,-0.0320968020127244,0.0152607586838193,0.0845460387353867,0.157862956932812,0.213627410283510,0.234433292058803,0.213627410283510,0.157862956932812,0.0845460387353867,0.0152607586838193,-0.0320968020127244,-0.0492672140398497,-0.0394190876857844,-0.0143738689839372,0.0111788546136904,0.0258185755732741,0.0253189360751059,0.0129951262378319,-0.00316325538761452,-0.0149003745646248,-0.0174798363625150,-0.0112575451563172,-0.000667699637068033,0.00851827609598724,0.0121291137400687,0.00932162509793802,0.00246334247774722,-0.00450206260885427,-0.00819657411948721,-0.00735036957404938,-0.00308987510505797,0.00198141321136188,0.00527836650663518,0.00549129901414302,0.00302142690249472,-0.000490591828793483,-0.00316803805115370,-0.00385674604167267,-0.00256991435306819,-0.000280356461407567,0.00172239576761462,0.00252374305662866,0.00196476830994624,0.000581761681437109,-0.000790675452817240,-0.00148902995381680,-0.00131477084764724,-0.000536240328039012,0.000343793840903912,0.000891916050444873,0.000946999415062327,0.000642510473715215,0.000274012677990304,-0.000802208597432932];
 signal_recv_BB = filtfilt(LPF, 1, signal_recv_IF_noise);
 % signal_recv_BB = signal_recv_IF_noise;
 % figure;
@@ -98,130 +101,86 @@ signal_recv_BB = filtfilt(LPF, 1, signal_recv_IF_noise);
 
 % viterbi译码
 
-de_out = zeros(size(I));
 % signal_recv_BB = signal_trans_IF;
-viterbi_deep = 10;
+signal_recv_BB = [signal_recv_BB, zeros(1,oversamp_IF)];
+
+de_out = zeros(size(I));
+viterbi_deep = 30;
 % signal_trans_IF(1 : oversamp_IF*viterbi_deep)
 for n = 1:viterbi_deep:num_bits_pulse
     % de_out = GMSK_demod(signal_recv_BB(1+(i-1)*oversamp_IF*viterbi_deep:i*oversamp_IF*viterbi_deep), de_out, i, viterbi_deep, g);
-    signal_recv = signal_recv_BB(1+(n-1)*oversamp_IF:(n - 1 + viterbi_deep)*oversamp_IF);
-    init_path = zeros(8, 3);
-    path_record = cell(32, viterbi_deep);
+    signal_recv = signal_recv_BB(1+(n-1)*oversamp_IF:(n - 1 + viterbi_deep+1)*oversamp_IF);
+    path_record = cell(64, viterbi_deep);
     % path_record_tmp = cell(32, 1);
-    path_weight = zeros(32, viterbi_deep);
+    init_path = zeros(64,6);
+    path_weight = zeros(64, viterbi_deep);
+
+    signal_recv_dif = signal_recv(1:4) .* conj(signal_recv(5:8));
+    % figure;
+    % plot(angle(signal_recv_dif))
     
-    init_path(1,:) = [0,0,0];
-    init_path(2,:) = [0,0,1];
-    init_path(3,:) = [0,1,0];
-    init_path(4,:) = [0,1,1];
-    init_path(5,:) = [1,0,0];
-    init_path(6,:) = [1,0,1];
-    init_path(7,:) = [1,1,0];
-    init_path(8,:) = [1,1,1];
-
-    if n == 1
-        init_path = [repmat(zeros(1,2),8,1), init_path];
-    else
-        init_path = [repmat(de_out(n-2:n-1),8,1), init_path];
+    for q = 1:64
+        init_path = dec2bin(q-1, 6) - '0';
+        path_record{q, 1} = init_path;
+        bit_5_fst = init_path(end-5:end-1);
+        bit_5_sec = init_path(end-4:end);
+        [phi_last, I_sig_fst, Q_sig_fst, ~] = GMSK(2*bit_5_fst-1, 0, g);
+        [~, I_sig_sec, Q_sig_sec, ~] = GMSK(2*bit_5_sec-1, phi_last, g);
+        g_path_dif = complex(I_sig_fst, Q_sig_fst) .* conj(complex(I_sig_sec, Q_sig_sec));
+        path_weight(q, 1) = real(sum(signal_recv_dif .* conj(g_path_dif))); % 取最大值
+        % figure;
+        % plot(angle(g_path_dif))
     end
-
-    % 初始化放入path_record中
-
-    phi_last = 0;
-    for j = 1:8
-        path_record{bin2dec(num2str(init_path(j,:)))+1, 1} = init_path(j,:);
-        bit_5 = init_path(j,:) * 2 - 1;
-        g_path_ang_dif = zeros(1,2);
-        signal_recv_ang_dif = zeros(1,2);
-        [~, I_sig, Q_sig, ~] = GMSK(bit_5, phi_last, g);
-        signal_recv_ang = angle(signal_recv(1:4));
-        g_path_ang = angle(complex(I_sig, Q_sig));
-        
-        for m = 1:2
-            g_path_ang_dif(m) = g_path_ang(m) - g_path_ang(m+2);
-            if  g_path_ang_dif(m) > pi
-                g_path_ang_dif(m) =  g_path_ang_dif(m) - 2*pi;
-            elseif  g_path_ang_dif(m) < -pi
-                g_path_dif_dif(m) =  g_path_ang_dif(m) + 2*pi;
-            end
-            signal_recv_ang_dif(m) = signal_recv_ang(m) - signal_recv_ang(m+2);
-            if signal_recv_ang_dif(m) > pi
-                signal_recv_ang_dif(m) = signal_recv_ang_dif(m) - 2*pi;
-            elseif signal_recv_ang_dif(m) < -pi
-                signal_recv_ang_dif(m) = signal_recv_ang_dif(m) + 2*pi;
-            end
-        end
-
-        path_weight(j,1) =  path_weight(j,1) + (sum(signal_recv_ang_dif) - sum(g_path_ang_dif)).^2;
-
-    end
-
-    % path_record_tmp = path_record;
 
     for i = 2:viterbi_deep
-        signal_recv_ang = angle(signal_recv(1+(i-1)*4:i*4));
-        for j = 1 : 32
-            if ~isempty(path_record{j,i-1})
-                bit_record = path_record{j,i-1};
-                bit_5 = bit_record(end-3:end);
-                
-                bit_record_cur0 = [bit_record, 0];
-                bit_record_cur1 = [bit_record, 1];
-                [~, I_sig0, Q_sig0, ~] = GMSK([bit_5*2-1,-1], 0, g);
-                [~, I_sig1, Q_sig1, ~] = GMSK([bit_5*2-1,1], 0, g);
-                
-                state_index0 = bin2dec(num2str([bit_record(end-3:end),0]))+1;
-                state_index1 = bin2dec(num2str([bit_record(end-3:end),1]))+1;
-                
-                g_path_ang_dif = zeros(1,2);
-                signal_recv_ang_dif = zeros(1,2);
-                g_path_ang0 = angle(complex(I_sig0, Q_sig0));
-                g_path_ang1 = angle(complex(I_sig1, Q_sig1));
-                
-                for m = 1:2
-                    g_path_ang_dif0(m) = g_path_ang0(m) - g_path_ang0(m+2);
-                    if  g_path_ang_dif0(m) > pi
-                        g_path_ang_dif0(m) =  g_path_ang_dif0(m) - 2*pi;
-                    elseif  g_path_ang_dif0(m) < -pi
-                        g_path_dif_dif0(m) =  g_path_ang_dif0(m) + 2*pi;
-                    end
-                    g_path_ang_dif1(m) = g_path_ang1(m) - g_path_ang1(m+2);
-                    if  g_path_ang_dif1(m) > pi
-                        g_path_ang_dif1(m) =  g_path_ang_dif1(m) - 2*pi;
-                    elseif  g_path_ang_dif1(m) < -pi
-                        g_path_dif_dif1(m) =  g_path_ang_dif1(m) + 2*pi;
-                    end
-                    signal_recv_ang_dif(m) = signal_recv_ang(m) - signal_recv_ang(m+2);
-                    if signal_recv_ang_dif(m) > pi
-                        signal_recv_ang_dif(m) = signal_recv_ang_dif(m) - 2*pi;
-                    elseif signal_recv_ang_dif(m) < -pi
-                        signal_recv_ang_dif(m) = signal_recv_ang_dif(m) + 2*pi;
-                    end
-                end
+        signal_recv_dif = signal_recv(1+(i-1)*4:i*4) .* conj(signal_recv(1+i*4:(i+1)*4));
+        for j = 1 : 64
+            bit_record = path_record{j,i-1};
+            bit_record_cur0 = [bit_record, 0];
+            bit_record_cur1 = [bit_record, 1];
 
-                if path_weight(state_index0,i) == 0 || path_weight(j,i-1) + (sum(signal_recv_ang_dif) - sum(g_path_ang_dif0)).^2 < path_weight(state_index0,i)
-                    path_weight(state_index0,i) =  path_weight(j,i-1) + (sum(signal_recv_ang_dif) - sum(g_path_ang_dif0)).^2;
-                    path_record{state_index0, i} = bit_record_cur0;                   
-                end
-                
-                if path_weight(state_index1,i) == 0 || path_weight(j,i-1) + (sum(signal_recv_ang_dif) - sum(g_path_ang_dif1)).^2 < path_weight(state_index1,i)
-                    path_weight(state_index1,i) =  path_weight(j,i-1) + (sum(signal_recv_ang_dif) - sum(g_path_ang_dif1)).^2;
-                    path_record{state_index1, i} = bit_record_cur1;                   
-                end
+            bit_5_fst0 = bit_record_cur0(end-5:end-1);
+            bit_5_sec0 = bit_record_cur0(end-4:end);
+            bit_5_fst1 = bit_record_cur1(end-5:end-1);
+            bit_5_sec1 = bit_record_cur1(end-4:end);
+            
+            [phi_last0, I_sig0_fst, Q_sig0_fst, ~] = GMSK(2*bit_5_fst0-1, 0, g);
+            [phi_last1, I_sig1_fst, Q_sig1_fst, ~] = GMSK(2*bit_5_fst1-1, 0, g);
+            [~, I_sig0_sec, Q_sig0_sec, ~] = GMSK(2*bit_5_sec0-1, phi_last0, g);
+            [~, I_sig1_sec, Q_sig1_sec, ~] = GMSK(2*bit_5_sec1-1, phi_last1, g);
+            
+            state_index0 = bin2dec(num2str(bit_record_cur0(end-5:end)))+1;
+            state_index1 = bin2dec(num2str(bit_record_cur1(end-5:end)))+1;
+            
+            g_path_dif0 = complex(I_sig0_fst, Q_sig0_fst) .* conj(complex(I_sig0_sec, Q_sig0_sec));
+            g_path_dif1 = complex(I_sig1_fst, Q_sig1_fst) .* conj(complex(I_sig1_sec, Q_sig1_sec));
+
+            path_weight0 = real(sum(signal_recv_dif .* conj(g_path_dif0)));
+            path_weight1 = real(sum(signal_recv_dif .* conj(g_path_dif1)));
+
+            if path_weight(state_index0,i) == 0 || path_weight(j,i-1) + path_weight0 > path_weight(state_index0,i)
+                path_weight(state_index0,i) =  path_weight(j,i-1) + path_weight0;
+                path_record{state_index0, i} = bit_record_cur0;                   
+            end
+            
+            if path_weight(state_index1,i) == 0 || path_weight(j,i-1) + path_weight1 > path_weight(state_index1,i)
+                path_weight(state_index1,i) =  path_weight(j,i-1) + path_weight1;
+                path_record{state_index1, i} = bit_record_cur1;                   
             end
         end
 
         % path_record = path_record_tmp;
     end
 
-    [~,index_min] = min(path_weight(:,end));
-    out = path_record{index_min,end};
-    de_out(n:n+viterbi_deep-1) = out(3:end-2);
+    [~,index_max] = max(path_weight(:,end));
+    out = path_record{index_max,end};
+    de_out(n:n+viterbi_deep-1) = out(3:end-3);
 end
 
 error = I_single - de_out;
 
 error(error~=0) = 1;
+error(end) = 0;
 
 error_rate = error_rate + sum(error);
 end
