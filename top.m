@@ -2,7 +2,7 @@ clear all;
 close all;
 
 % rng(0);
-Ne = 100;
+Ne = 1;
 
 bit_rate = 16e6;  % 符号速率
 T = 1/bit_rate;  % 符号时间
@@ -22,7 +22,7 @@ error_index = 1;
 error_cnt = zeros(1,9);
 Eb_N0_cnt = zeros(1,9);
 
-for Eb_N0 = 5:13
+for Eb_N0 = 8
 
 error_rate = 0;
 
@@ -119,15 +119,21 @@ for n = 1:viterbi_deep:num_bits_pulse
     % figure;
     % plot(angle(signal_recv_dif))
     
-    for q = 1:64
-        init_path = dec2bin(q-1, 6) - '0';
-        path_record{q, 1} = init_path;
+    for q = 1:16
+        init_path = dec2bin(q-1, 4) - '0';
+        if n == 1
+            init_path = [0,0,init_path];
+        else
+            init_path = [de_out(n-2), de_out(n-1), init_path];
+        end
+        pos = bin2dec(num2str(init_path))+1;
+        path_record{pos, 1} = init_path;
         bit_5_fst = init_path(end-5:end-1);
         bit_5_sec = init_path(end-4:end);
         [phi_last, I_sig_fst, Q_sig_fst, ~] = GMSK(2*bit_5_fst-1, 0, g);
         [~, I_sig_sec, Q_sig_sec, ~] = GMSK(2*bit_5_sec-1, phi_last, g);
         g_path_dif = complex(I_sig_fst, Q_sig_fst) .* conj(complex(I_sig_sec, Q_sig_sec));
-        path_weight(q, 1) = real(sum(signal_recv_dif .* conj(g_path_dif))); % 取最大值
+        path_weight(pos, 1) = real(sum(signal_recv_dif .* conj(g_path_dif))); % 取最大值
         % figure;
         % plot(angle(g_path_dif))
     end
@@ -135,37 +141,55 @@ for n = 1:viterbi_deep:num_bits_pulse
     for i = 2:viterbi_deep
         signal_recv_dif = signal_recv(1+(i-1)*4:i*4) .* conj(signal_recv(1+i*4:(i+1)*4));
         for j = 1 : 64
-            bit_record = path_record{j,i-1};
-            bit_record_cur0 = [bit_record, 0];
-            bit_record_cur1 = [bit_record, 1];
+            if ~isempty(path_record{j,i-1})
+                bit_record = path_record{j,i-1};
+                bit_record_cur0 = [bit_record, 0];
+                bit_record_cur1 = [bit_record, 1];
+                
+                bit_5_fst0 = bit_record_cur0(end-5:end-1);
+                bit_5_sec0 = bit_record_cur0(end-4:end);
+                bit_5_fst1 = bit_record_cur1(end-5:end-1);
+                bit_5_sec1 = bit_record_cur1(end-4:end);
+                
+                [phi_last0, I_sig0_fst, Q_sig0_fst, ~] = GMSK(2*bit_5_fst0-1, 0, g);
+                [phi_last1, I_sig1_fst, Q_sig1_fst, ~] = GMSK(2*bit_5_fst1-1, 0, g);
+                [~, I_sig0_sec, Q_sig0_sec, ~] = GMSK(2*bit_5_sec0-1, phi_last0, g);
+                [~, I_sig1_sec, Q_sig1_sec, ~] = GMSK(2*bit_5_sec1-1, phi_last1, g);
+                
+                state_index0 = bin2dec(num2str(bit_record_cur0(end-5:end)))+1;
+                state_index1 = bin2dec(num2str(bit_record_cur1(end-5:end)))+1;
+                
+                g_path_dif0 = complex(I_sig0_fst, Q_sig0_fst) .* conj(complex(I_sig0_sec, Q_sig0_sec));
+                g_path_dif1 = complex(I_sig1_fst, Q_sig1_fst) .* conj(complex(I_sig1_sec, Q_sig1_sec));
+                
+                path_weight0 = real(sum(signal_recv_dif .* conj(g_path_dif0)));
+                path_weight1 = real(sum(signal_recv_dif .* conj(g_path_dif1)));
 
-            bit_5_fst0 = bit_record_cur0(end-5:end-1);
-            bit_5_sec0 = bit_record_cur0(end-4:end);
-            bit_5_fst1 = bit_record_cur1(end-5:end-1);
-            bit_5_sec1 = bit_record_cur1(end-4:end);
-            
-            [phi_last0, I_sig0_fst, Q_sig0_fst, ~] = GMSK(2*bit_5_fst0-1, 0, g);
-            [phi_last1, I_sig1_fst, Q_sig1_fst, ~] = GMSK(2*bit_5_fst1-1, 0, g);
-            [~, I_sig0_sec, Q_sig0_sec, ~] = GMSK(2*bit_5_sec0-1, phi_last0, g);
-            [~, I_sig1_sec, Q_sig1_sec, ~] = GMSK(2*bit_5_sec1-1, phi_last1, g);
-            
-            state_index0 = bin2dec(num2str(bit_record_cur0(end-5:end)))+1;
-            state_index1 = bin2dec(num2str(bit_record_cur1(end-5:end)))+1;
-            
-            g_path_dif0 = complex(I_sig0_fst, Q_sig0_fst) .* conj(complex(I_sig0_sec, Q_sig0_sec));
-            g_path_dif1 = complex(I_sig1_fst, Q_sig1_fst) .* conj(complex(I_sig1_sec, Q_sig1_sec));
-
-            path_weight0 = real(sum(signal_recv_dif .* conj(g_path_dif0)));
-            path_weight1 = real(sum(signal_recv_dif .* conj(g_path_dif1)));
-
-            if path_weight(state_index0,i) == 0 || path_weight(j,i-1) + path_weight0 > path_weight(state_index0,i)
-                path_weight(state_index0,i) =  path_weight(j,i-1) + path_weight0;
-                path_record{state_index0, i} = bit_record_cur0;                   
-            end
-            
-            if path_weight(state_index1,i) == 0 || path_weight(j,i-1) + path_weight1 > path_weight(state_index1,i)
-                path_weight(state_index1,i) =  path_weight(j,i-1) + path_weight1;
-                path_record{state_index1, i} = bit_record_cur1;                   
+                % if viterbi_deep + n > num_bits_pulse && i >= viterbi_deep-2
+                %     if path_weight(state_index0,i) == 0 || path_weight(j,i-1) + path_weight0 > path_weight(state_index0,i)
+                %         path_weight(state_index0,i) =  path_weight(j,i-1) + path_weight0;
+                %         path_record{state_index0, i} = bit_record_cur0;                                      
+                %     end
+                % else
+                %     if path_weight(state_index0,i) == 0 || path_weight(j,i-1) + path_weight0 > path_weight(state_index0,i)
+                %         path_weight(state_index0,i) =  path_weight(j,i-1) + path_weight0;
+                %         path_record{state_index0, i} = bit_record_cur0;                   
+                %     end
+                    
+                %     if path_weight(state_index1,i) == 0 || path_weight(j,i-1) + path_weight1 > path_weight(state_index1,i)
+                %         path_weight(state_index1,i) =  path_weight(j,i-1) + path_weight1;
+                %         path_record{state_index1, i} = bit_record_cur1;                                     
+                %     end
+                % end
+                if path_weight(state_index0,i) == 0 || path_weight(j,i-1) + path_weight0 > path_weight(state_index0,i)
+                    path_weight(state_index0,i) =  path_weight(j,i-1) + path_weight0;
+                    path_record{state_index0, i} = bit_record_cur0;                   
+                end
+                
+                if path_weight(state_index1,i) == 0 || path_weight(j,i-1) + path_weight1 > path_weight(state_index1,i)
+                    path_weight(state_index1,i) =  path_weight(j,i-1) + path_weight1;
+                    path_record{state_index1, i} = bit_record_cur1;                                   
+                end
             end
         end
 
@@ -180,7 +204,7 @@ end
 error = I_single - de_out;
 
 error(error~=0) = 1;
-error(end) = 0;
+error(end-2:end) = 0;
 
 error_rate = error_rate + sum(error);
 end
